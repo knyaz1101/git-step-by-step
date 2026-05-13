@@ -1,0 +1,13 @@
+name: My First DevOps Robot
+
+on: [push]
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say Hello
+        run: echo "Привет, будущий DevOps инженер! Твой робот запущен."
+      - name: Show Date
+        run: date
+
