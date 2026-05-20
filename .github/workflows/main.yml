@@ -1,0 +1,14 @@
+YAML
+name: My First GitHub Actions
+
+on: [push]
+
+env:
+  PROJECT_NAME: "MyFirstCI"
+
+jobs:
+  build_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print welcome message
+        run: echo "Starting build for $PROJECT_NAME"
