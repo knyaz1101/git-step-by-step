@@ -1,14 +1,38 @@
 YAML
-name: My First GitHub Actions
+name: Parallel and Sequential Jobs
 
 on: [push]
 
 env:
   PROJECT_NAME: "MyFirstCI"
+  LOG_FILE: "log.txt" # Переменная для имени файла, как в видео
 
 jobs:
   build_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Print welcome message
-        run: echo "Starting build for $PROJECT_NAME"
+      - name: Run Build
+        run: |
+          echo "Job STARTED"
+          echo "Building project $PROJECT_NAME..."
+          echo "Build stage done" >> $LOG_FILE
+
+  test_job:
+    runs-on: ubuntu-latest
+    needs: build_job # КРИТИЧЕСКИЙ МОМЕНТ: ждем, пока выполнится build_job
+    steps:
+      - name: Run Test
+        run: |
+          echo "Testing project $PROJECT_NAME..."
+          echo "Test stage done" >> $LOG_FILE
+
+  deploy_job:
+    runs-on: ubuntu-latest
+    needs: test_job # Ждем, пока выполнится test_job
+    steps:
+      - name: Run Deploy
+        run: |
+          echo "Deploying project $PROJECT_NAME..."
+          echo "Deploy stage done" >> $LOG_FILE
+          echo "--- Final Log Content ---"
+          cat $LOG_FILE # Пробуем прочитать файл в самом конце
