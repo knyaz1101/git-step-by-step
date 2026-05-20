@@ -1,11 +1,11 @@
 YAML
-name: Parallel and Sequential Jobs
+name: Shared Artifacts Pipeline
 
 on: [push]
 
 env:
   PROJECT_NAME: "MyFirstCI"
-  LOG_FILE: "log.txt" # Переменная для имени файла, как в видео
+  LOG_FILE: "log.txt"
 
 jobs:
   build_job:
@@ -13,26 +13,51 @@ jobs:
     steps:
       - name: Run Build
         run: |
-          echo "Job STARTED"
           echo "Building project $PROJECT_NAME..."
           echo "Build stage done" >> $LOG_FILE
+          
+      # Сохраняем файл в облако GitHub под именем "pipeline-logs"
+      - name: Upload Log from Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs
+          path: ${{ env:LOG_FILE }}
 
   test_job:
     runs-on: ubuntu-latest
-    needs: build_job # КРИТИЧЕСКИЙ МОМЕНТ: ждем, пока выполнится build_job
+    needs: build_job
     steps:
+      # Скачиваем сохраненный файл из облака на этот сервер
+      - name: Download Log for Test
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-logs
+
       - name: Run Test
         run: |
           echo "Testing project $PROJECT_NAME..."
           echo "Test stage done" >> $LOG_FILE
 
+      # Перезаписываем обновленный файл обратно в облако
+      - name: Upload Log from Test
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs
+          path: ${{ env:LOG_FILE }}
+
   deploy_job:
     runs-on: ubuntu-latest
-    needs: test_job # Ждем, пока выполнится test_job
+    needs: test_job
     steps:
+      # Скачиваем самый свежий файл перед деплоем
+      - name: Download Log for Deploy
+        uses: actions/download-artifact@v4
+        with:
+          name: pipeline-logs
+
       - name: Run Deploy
         run: |
           echo "Deploying project $PROJECT_NAME..."
           echo "Deploy stage done" >> $LOG_FILE
           echo "--- Final Log Content ---"
-          cat $LOG_FILE # Пробуем прочитать файл в самом конце
+          cat $LOG_FILE # Вот теперь проверяем!
